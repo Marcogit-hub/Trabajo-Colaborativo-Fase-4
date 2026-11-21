@@ -109,4 +109,4 @@ for carro in lista_carros:
 
 print("-" * 50)
 print(f"💰 TOTAL DEL DÍA: $ {total_dia:,} pesos")
-print("Proceso finalizado")
+print("Proceso finalizado, codigo sin parar")
