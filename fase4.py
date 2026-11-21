@@ -1,21 +1,42 @@
 import logging
 from datetime import datetime
 
-fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-print(f"📅 Fecha y hora: {fecha_actual}")
-
 # 1. Archivo de logs
 logging.basicConfig(
     filename="errores.log",
     level=logging.ERROR,
-    format="%(asctime)s - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# 2. Excepciones Personalizadas
+class ErrorParqueadero(Exception):
+    """Excepción base para errores del sistema de parqueadero."""
+    pass
+
+class HoraInvalidaError(ErrorParqueadero):
+    """Se lanza cuando las horas están fuera de rango o la salida es menor al ingreso."""
+    pass
+
+class DatoVacioError(ErrorParqueadero):
+    """Se lanza cuando un campo de texto queda vacío."""
+    pass
+
+class RegistroCarroError(ErrorParqueadero):
+    """Excepción para demostrar encadenamiento de excepciones."""
+    pass
+
+
 class Carro:
-    
     _valor_hora = 2000
     
-    def __init__(self, color, marca, placa, hora_ingreso, hora_salida):
+    def _init_(self, color, marca, placa, hora_ingreso, hora_salida):
+        if not color.strip() or not marca.strip() or not placa.strip():
+            raise DatoVacioError("El color, la marca y la placa no pueden estar vacíos.")
+        if not (0 <= hora_ingreso <= 23) or not (0 <= hora_salida <= 23):
+            raise HoraInvalidaError("Las horas deben estar entre 0 y 23.")
+        if hora_salida < hora_ingreso:
+            raise HoraInvalidaError("La hora de salida no puede ser menor a la de ingreso.")
+            
         self._color = color
         self._marca = marca
         self._placa = placa
@@ -28,49 +49,64 @@ class Carro:
         
     def mostrar_informacion(self):
         return (
-            f"carro: {self._color} marca {self._marca} placa: {self._placa}"
-            f" Ingreso a las: {self._hora_ingreso}"
-            f" Salio a las: {self._hora_salida}"
+            f"Carro: {self._color} | Marca: {self._marca} | Placa: {self._placa} | "
+            f"Ingreso: {self._hora_ingreso}:00 | Salió: {self._hora_salida}:00"
         )
+
+
+def registrar_carro():
+    """Captura datos y aplica encadenamiento de excepciones."""
+    try:
+        color = input("Color del carro: ")
+        marca = input("Marca del carro: ")
+        placa = input("Placa: ")
+        hora_ingreso = int(input("Hora de ingreso (0-23): "))
+        hora_salida = int(input("Hora de salida (0-23): "))
+        
+        return Carro(color, marca, placa, hora_ingreso, hora_salida)
+        
+    except (ValueError, ErrorParqueadero) as e:
+        # 3. Encadenamiento de excepciones ('raise ... from e')
+        raise RegistroCarroError(f"Fallo al procesar los datos del vehículo: {e}") from e
+
+
+# --- Ejecución principal estable (no se detiene ante errores) ---
+fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+print(f"📅 Fecha y hora: {fecha_actual}")
 
 lista_carros = []
 
-try:
-    cantidad = int(input("Cuantos carros desea registrar: "))
-
-    for i in range(cantidad):
-        print(f"Datos del carro {i+1}: ")
-        color = input("ingrese el color: ")
-        marca = input("ingrese la marca: ")
-        placa = input("ingrese la placa: ")
-        hora_ingreso = int(input("Digita la hora de ingreso en numeros: "))
-        hora_salida = int(input("Digita la hora de salida en numeros: "))
+while True:
+    try:
+        nuevo_carro = registrar_carro()
         
-        if hora_salida < hora_ingreso:
-            print("La hora de salida no puede ser antes de la de ingreso")
-            continue
+    except RegistroCarroError as e:
+        # Se registra tanto el error actual como su causa original (_cause_)
+        logging.error(f"{e} | Causa original: {repr(e._cause_)}")
+        print(f"\n⚠️ {e}\nPor favor, intenta registrar el vehículo nuevamente.\n")
         
-        nuevo_carro = Carro(color, marca, placa, hora_ingreso, hora_salida)
+    else:
         lista_carros.append(nuevo_carro)
+        print("✅ Vehículo registrado con éxito.")
         
-except ValueError:
-    print("Error: Escribe solo números por favor\n")
+    finally:
+        print(f"ℹ️ Total parcial en sistema: {len(lista_carros)} carro(s).")
+        continuar = input("¿Deseas registrar otro carro? (s/n): ").strip().lower()
+        if continuar != "s":
+            break
 
-else:
-    print("\n" + "-" * 50)
-    print(f"📊 Total de carros registrados: {len(lista_carros)}")
-    print("        RESUMEN DEL DÍA")
-    print("-" * 50)
-    total_dia = 0
+# --- Resumen final ---
+print("\n" + "-" * 50)
+print(f"📊 Total de carros registrados: {len(lista_carros)}")
+print("        RESUMEN DEL DÍA")
+print("-" * 50)
+total_dia = 0
 
-    for carro in lista_carros:
-        valor = carro.horas_a_pagar()
-        total_dia += valor
-        print(f"{carro.mostrar_informacion()} → Paga: $ {valor:,} pesos")
-    print("-" * 50)
-    print(f"💰 TOTAL DEL DÍA: $ {total_dia:,} pesos")
-    
-finally:
-    print("-" * 40)
-    print("¡Gracias por usar nuestro sistema!")
-    print("Proceso finalizado")
+for carro in lista_carros:
+    valor = carro.horas_a_pagar()
+    total_dia += valor
+    print(f"{carro.mostrar_informacion()} → Paga: $ {valor:,} pesos")
+
+print("-" * 50)
+print(f"💰 TOTAL DEL DÍA: $ {total_dia:,} pesos")
+print("Proceso finalizado")
