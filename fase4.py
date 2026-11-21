@@ -1,8 +1,5 @@
 import logging
-from datetime import datetime
 
-fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-print(f" Fecha y hora: {fecha_actual}")
 # 1. Archivo de logs
 logging.basicConfig(
     filename="errores.log",
@@ -52,28 +49,15 @@ try:
         nuevo_carro=Carro(color,marca,placa,hora_ingreso,hora_salida) 
         lista_carros.append(nuevo_carro)
 except ValueError:
-print("Error: Escribe solo números por favor\n")
-
-      
+    print("debes usar un numero")       
     
         
-else:
-    print("\n" + "-" * 50)
-    print(f"📊 Total de carros registrados: {len(lista_carros)}")
-    print("        RESUMEN DEL DÍA")
-    print("-" * 50)
-    total_dia = 0
-
+else:    
     for carro in lista_carros:
-        valor = carro.horas_a_pagar()
-        total_dia += valor
-        print(f"{carro.mostrar_informacion()} → Paga: $ {valor:,} pesos")
-    print("-" * 50)
-    print(f"💰 TOTAL DEL DÍA: $ {total_dia:,} pesos")
-
+            print(f"{carro.mostrar_informacion()} Cliente paga: $ {carro.horas_a_pagar()}  pesos")
+    
     
     
 finally:
-    print("-" * 40)
-    print("¡Gracias por usar nuestro sistema!")
-    print("Proceso finalizado")
+     print("sigue el codigo sin parar")
+   
