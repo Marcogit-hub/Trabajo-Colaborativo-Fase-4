@@ -29,7 +29,8 @@ class RegistroCarroError(ErrorParqueadero):
 class Carro:
     _valor_hora = 2000
     
-    def _init_(self, color, marca, placa, hora_ingreso, hora_salida):
+    # Corrección 1: Doble guion bajo en __init__
+    def __init__(self, color, marca, placa, hora_ingreso, hora_salida):
         if not color.strip() or not marca.strip() or not placa.strip():
             raise DatoVacioError("El color, la marca y la placa no pueden estar vacíos.")
         if not (0 <= hora_ingreso <= 23) or not (0 <= hora_salida <= 23):
@@ -37,9 +38,9 @@ class Carro:
         if hora_salida < hora_ingreso:
             raise HoraInvalidaError("La hora de salida no puede ser menor a la de ingreso.")
             
-        self._color = color
-        self._marca = marca
-        self._placa = placa
+        self._color = color.strip()
+        self._marca = marca.strip()
+        self._placa = placa.strip().upper()
         self._hora_ingreso = hora_ingreso
         self._hora_salida = hora_salida
         
@@ -66,11 +67,10 @@ def registrar_carro():
         return Carro(color, marca, placa, hora_ingreso, hora_salida)
         
     except (ValueError, ErrorParqueadero) as e:
-        # 3. Encadenamiento de excepciones ('raise ... from e')
         raise RegistroCarroError(f"Fallo al procesar los datos del vehículo: {e}") from e
 
 
-# --- Ejecución principal estable (no se detiene ante errores) ---
+# --- Ejecución principal estable ---
 fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 print(f"📅 Fecha y hora: {fecha_actual}")
 
@@ -81,8 +81,8 @@ while True:
         nuevo_carro = registrar_carro()
         
     except RegistroCarroError as e:
-        # Se registra tanto el error actual como su causa original (_cause_)
-        logging.error(f"{e} | Causa original: {repr(e._cause_)}")
+        # Corrección 2: Doble guion bajo en __cause__
+        logging.error(f"{e} | Causa original: {repr(e.__cause__)}")
         print(f"\n⚠️ {e}\nPor favor, intenta registrar el vehículo nuevamente.\n")
         
     else:
